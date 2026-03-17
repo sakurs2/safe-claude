@@ -140,7 +140,7 @@ proxy-groups:
       - 静态IP代理
 
 rules:
-  - MATCH,DIRECT                          
+  - MATCH,AI服务                   
 ```
 
 注意上述配置的`mixed-port`值需要与 clash 设置里的一致
