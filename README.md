@@ -190,11 +190,12 @@ proxy-groups:
       - 静态IP代理
 
 rules:
-  - DOMAIN-SUFFIX,api.anthropic.com,AI服务 # 新增
+  - DOMAIN-KEYWORD,anthropic,AI服务 # 新增
+  - DOMAIN-KEYWORD,claude,AI服务 # 新增
   - MATCH,DIRECT
 ```
 
-> 💡rules里`DOMAIN-SUFFIX,api.anthropic.com,AI服务`也可以改成`DOMAIN-KEYWORD,anthropic,AI服务`，即通过识别关键字的方式走代理
+> 💡rules里也可以使用`DOMAIN-SUFFIX`精准捕获url，这里用`DOMAIN-KEYWORD`更粗暴更省事。
 
 clash 开启虚拟网卡模式后，本地打开终端执行`curl ipinfo.io` 命令，此时返回的应该是你的本机 IP，然后再执行`curl https://api.anthropic.com/v1/messages`，不用管结果，回到clash 的日志界面，搜索日志看到该请求使用了链式代理，即代表配置成功生效。
 
@@ -204,18 +205,101 @@ clash 开启虚拟网卡模式后，本地打开终端执行`curl ipinfo.io` 命
 
 同理，如果你有别的网址需要走纯净 IP 来访问，只需要在 rules 里更改或添加即可
 
-### 五、注册账号
+### 五、Clash 配置最佳实践
 
-### 六、购买 Claude Code 套餐
+根据我的经验，我将使用场景主要分为两类，一类是**个人使用场景**，一类是**办公使用场景**。
+
+对于**个人使用场景**，我们期望请求 claude 模型的流量走家庭纯净代理，而对于 github、google 等同样需要代理才能访问的场景，我们可以在 rules 里用同样的方法让这些请求走纯净代理或者直接走机场 IP，这种配置方法比较简单，读者照猫画虎改文件即可，比如下面的示例：
+
+```yaml
+mixed-port: 7897
+allow-lan: false
+mode: rule
+
+proxies:
+  - {你刚选择的节点}
+  - name: 静态IP代理
+    type: socks5
+    server: 你购买的IP 
+    port: 你购买的IP的PORT 
+    username: "用户名" 
+    password: "密码" 
+    udp: false
+    dialer-proxy: 你刚选择的节点的name字段 
+
+proxy-groups:
+  - name: AI服务
+    type: select
+    proxies:
+      - 静态IP代理
+
+rules:
+  - DOMAIN-KEYWORD,anthropic,AI服务
+  - DOMAIN-KEYWORD,claude,AI服务
+  - DOMAIN-KEYWORD,google,AI服务 # 这里也可以不填AI 服务，填你购买的机场，毕竟访问这些网站不需要纯净IP
+  - DOMAIN-KEYWORD,github,AI服务
+  - MATCH,DIRECT
+```
+
+对于**办公使用场景**，如果读者用第四节的配置会发现一个问题，办公网可以访问一些网站但开了 clash 后无法访问，而且这些网站是没有命中我们设置的代理规则的，比如有些人的办公网可以直连 Google，但按上述配置 clash 后发现无法访问 Google，这里问题的本质 Clash Tun 模式接管了 DNS 解析，导致部分网站域名解析错误。解决这个问题也很简单，可以手动设置下 DNS 地址，macos 用户可以执行下列指令查看办公网有哪些 DNS 地址。
+
+```shell
+scutil --dns | grep "nameserver" | head -5
+```
+
+根据获取的 DNS 地址，对配置文件新增 DNS 配置：
+
+```yaml
+mixed-port: 7897
+allow-lan: false
+mode: rule 
+
+dns: # 增加 DNS 配置
+  enable: true
+  enhanced-mode: redir-host
+  nameserver:
+    - X.X.X.X
+    - X.X.X.X
+
+proxies:
+  - {你刚选择的节点}
+  - name: 静态IP代理
+    type: socks5
+    server: 你购买的IP 
+    port: 你购买的IP的PORT 
+    username: "用户名" 
+    password: "密码" 
+    udp: false
+    dialer-proxy: 你刚选择的节点的name字段 
+
+proxy-groups:
+  - name: AI服务
+    type: select
+    proxies:
+      - 静态IP代理
+
+rules:
+  - DOMAIN-KEYWORD,anthropic,AI服务
+  - DOMAIN-KEYWORD,claude,AI服务
+  - MATCH,DIRECT
+```
+
+通过上述配置即可实现办公网只有 Claude 请求走代理，其余请求保持原状。
+
+读者可将上述两份配置分别导入 Clash，在需要时灵活切换。
+
+### 六、注册账号
+
+### 七、购买 Claude Code 套餐
 
 这里如果你愿意钻研的话可以研究如何安全支付购买，我给出的方法是用第三方服务，他们可以保证支付这条链路是安全的，不过是要收取一定的手续费，这里我使用[wild](https://bewild.ai?code=1L8VLDN9)，具体的充值方式可以参考该网站。
 
 如果有同学愿意分享也可以提 PR 补充下如何个人购买从而节省手续费。
 
-### 七、使用 Claude Code
+### 八、使用 Claude Code
 
 如果你之前是通过 api key 的方式使用 Claude Code，只需要进入 Claude Code，用`/login`指令登录你的 Claude 账号即可，然后注释掉环境变量里的 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN`，此时重新启动 Claude Code，会默认使用订阅套餐。
 
 ## 总结
 
-本文主要是用链式代理来教你如何安全访问 claude code，记得在使用时打开 clash verge。
+本文主要是用链式代理来教你如何安全访问 claude code，记得在使用时打开 clash verge，如果你有任何不确定，例如开启 clash 后请求 Claude 有没有走代理，可以在 Clash 的日志页面验证，有任何问题欢迎提**ISSUE!**
