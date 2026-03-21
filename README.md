@@ -113,6 +113,8 @@ curl --proxy socks5h://{username}:{passwd}@{ip}:{port} https://ipinfo.io
 
 在`proxies`这里选择一个节点，要求是**地理位置距离你购买的静态住宅代理IP近且网络测试时延低**
 
+> 💡请确保选择的代理的配置里udp为true
+
 ![choose](./assets/choose.png)
 
 然后新建一个文件 `config.yaml`，内容如下：
@@ -130,7 +132,7 @@ proxies:
     port: 你购买的IP的PORT # 替换，例如 2370
     username: "用户名" # 替换，例如 "dwddcdeew"
     password: "密码" # 替换，例如 "mcdeyncdw"
-    udp: false
+    udp: true
     dialer-proxy: 你刚选择的节点的name字段 # 替换
 
 proxy-groups:
@@ -180,7 +182,7 @@ proxies:
     port: 你购买的IP的PORT 
     username: "用户名" 
     password: "密码" 
-    udp: false
+    udp: true
     dialer-proxy: 你刚选择的节点的name字段 
 
 proxy-groups:
@@ -225,7 +227,7 @@ proxies:
     port: 你购买的IP的PORT 
     username: "用户名" 
     password: "密码" 
-    udp: false
+    udp: true
     dialer-proxy: 你刚选择的节点的name字段 
 
 proxy-groups:
@@ -270,7 +272,7 @@ proxies:
     port: 你购买的IP的PORT 
     username: "用户名" 
     password: "密码" 
-    udp: false
+    udp: true
     dialer-proxy: 你刚选择的节点的name字段 
 
 proxy-groups:
