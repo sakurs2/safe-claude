@@ -196,6 +196,7 @@ rules:
 ```
 
 > 💡rules里也可以使用`DOMAIN-SUFFIX`精准捕获url，这里用`DOMAIN-KEYWORD`更粗暴更省事。
+> 💡这里最好`DOMAIN-SUFFIX`和`DOMAIN-KEYWORD`共用，避免漏掉流量
 
 clash 开启虚拟网卡模式后，本地打开终端执行`curl ipinfo.io` 命令，此时返回的应该是你的本机 IP，然后再执行`curl https://api.anthropic.com/v1/messages`，不用管结果，回到clash 的日志界面，搜索日志看到该请求使用了链式代理，即代表配置成功生效。
 
@@ -291,6 +292,8 @@ rules:
 #### ⚠️注意事项
 
 因为本地可能会有各种原因导致代理异常，所以在使用 claude 前为保险起见可在命令行执行 `curl api.anthropic.com`，看 clash 日志是否可以搜到该域名的流量转发记录，或者在配置里添加`DOMAIN-KEYWORD,ipinfo,AI服务`，通过`curl ipinfo.io`看返回的是不是纯净代理 IP。
+
+该方案由于使用了链式代理，所以**对于被代理请求可能会产生较高时延**，这部分主要受购买的代理服务的质量决定，核心在于本地请求代理服务时延+代理服务请求纯净ip时延，这部分读者自行优化。
 
 如果上述case验证失败证明当前代理流程有异常，建议结合 AI 排查下。
 
